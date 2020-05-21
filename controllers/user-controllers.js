@@ -23,7 +23,7 @@ const createUser = async (req, res, next) => {
         );
     }
 
-    const { name, email, password, places } = req.body;
+    const { name, email, password } = req.body;
     let existingUser;
 
     try {
@@ -44,7 +44,7 @@ const createUser = async (req, res, next) => {
         image:
             'https://images.unsplash.com/photo-1506919258185-6078bba55d2a?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1030&q=80',
         password,
-        places,
+        places: [],
     });
 
     try {
