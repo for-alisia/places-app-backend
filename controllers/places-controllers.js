@@ -11,7 +11,9 @@ const getPlaceById = async (req, res, next) => {
     try {
         place = await Place.findById(placeId);
     } catch (err) {
-        return next(HttpError("Couldn't find a place in the database", 500));
+        return next(
+            new HttpError("Couldn't find a place in the database", 500)
+        );
     }
 
     if (!place) {
