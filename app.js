@@ -1,9 +1,11 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
 
 const placesRoutes = require('./routes/places-routes');
 const userRoutes = require('./routes/users-routes');
 const HttpError = require('./models/http-error');
+const { MONGO_URL } = require('./config');
 
 const app = express();
 
@@ -32,5 +34,20 @@ app.use((error, req, res, next) => {
     });
 });
 
-//Start server
-app.listen(5000);
+//Connect to mongo (using mongoose). Return promise. If connection was success, start server
+
+const connectConfig = {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    useCreateIndex: true,
+};
+mongoose
+    .connect(MONGO_URL, connectConfig)
+    .then(() => {
+        console.log('Successfull connection');
+        //Start server
+        app.listen(5000);
+    })
+    .catch((err) => {
+        console.log(err);
+    });
