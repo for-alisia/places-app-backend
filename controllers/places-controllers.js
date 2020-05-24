@@ -59,7 +59,7 @@ const createPlace = async (req, res, next) => {
     return next(new HttpError('Invalid inputs passed, check your data', 422));
   }
   //Get data from request body
-  const { title, description, address, creator } = req.body;
+  const { title, description, address } = req.body;
   let coordinates;
   //Get coordinates by address, using Google Geocoder (util/location)
   try {
@@ -74,13 +74,13 @@ const createPlace = async (req, res, next) => {
     address,
     location: coordinates,
     image: req.file.path,
-    creator,
+    creator: req.userData.userId,
   });
 
   let user;
   //Check, if the user with this id is exists in DB
   try {
-    user = await User.findById(creator);
+    user = await User.findById(req.userData.userId);
   } catch (err) {
     return next(new HttpError('Connection failed', 500));
   }
@@ -126,6 +126,12 @@ const updatePlace = async (req, res, next) => {
   } catch (err) {
     return next(new HttpError('Updating place failed, please try again', 500));
   }
+
+  //Check, if the user who sent a request is a creator of this place
+  //We need to convert creator to a string (because it was a mongoose object)
+  if (updatePlace.creator.toString() !== req.userData.userId) {
+    return next(new HttpError('You are not allowed to edit this place', 401));
+  }
   //Update place object with new data
   updatedPlace.title = title;
   updatedPlace.description = description;
@@ -150,12 +156,15 @@ const deletePlace = async (req, res, next) => {
     //populate return related user to this place (we can interract with this object using place.creator)
     place = await Place.findById(placeId).populate('creator');
   } catch (err) {
-    console.log(err);
     return next(new HttpError('Cant reach place, please try again', 500));
   }
   // Return error, if place wasn't found
   if (!place) {
     return next(new HttpError('There are no place with the provided ID', 404));
+  }
+
+  if (place.creator.id !== req.userData.userId) {
+    return next(new HttpError('You are not allowed to delete this place', 401));
   }
 
   const imagePath = place.image;
